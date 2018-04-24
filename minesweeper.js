@@ -139,12 +139,19 @@ function makeBoard () {
     myCol++;
   }
 
-  // Looping through cell objects and assigning hidden, isMine and isMarked
+  // Looping through cell objects and assigning hidden and isMarked
   // properties.
   for (cell = 0; cell < board.cells.length; cell++) {
     board.cells[cell].hidden = true;
-    board.cells[cell].isMine = true;
     board.cells[cell].isMarked = false;
+
+  // Assigning isMine = true to 30% of cells.
+    let mineChance = Math.floor(Math.random() * 100)
+    if (mineChance >= 70) {
+      board.cells[cell].isMine = true;
+    } else {
+      board.cells[cell].isMine = false;
+    }
   }
 
 
