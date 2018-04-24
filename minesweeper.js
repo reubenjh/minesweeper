@@ -37,6 +37,13 @@ function checkForWin () {
   // You can use this function call to declare a winner (once you've
   // detected that they've won, that is!)
   lib.displayMessage('You win!')
+  
+  // Giving reset options on game win
+  removeListeners()
+  document.getElementById('play-again').innerHTML = '<p class="title">PLAY AGAIN?</p><button id="same">SAME SIZE</button><button id="bigger">BIGGER</button><button id="smaller">SMALLER</button><p class="context">up to 8x8 max size</p>'
+  document.getElementById('same').addEventListener('click', makeSameBoard)
+  document.getElementById('bigger').addEventListener('click', makeBiggerBoard)
+  document.getElementById('smaller').addEventListener('click', makeSmallerBoard)
 }
 
 
@@ -61,9 +68,9 @@ function makeBoard () {
   let myCol = 0;
 
   // Looping through cell objects and assigning row and col properties.
-  // Only works up to width * 8 since I don't want the board to go any bigger
+  // Only works up to width * 6 since game can only cope with 36 cells
   for (cell = 0; cell < board.cells.length; cell++) {
-    if (cell == board.width || cell == (board.width * 2) || cell == (board.width * 3) || cell == (board.width * 4) || cell == (board.width * 5) || cell == (board.width * 6) || cell == (board.width * 7) || cell == (board.width * 8)) {
+    if (cell == board.width || cell == (board.width * 2) || cell == (board.width * 3) || cell == (board.width * 4) || cell == (board.width * 5) || cell == (board.width * 6)) {
       myRow++;
       myCol = myCol - board.width;
     }
@@ -90,74 +97,224 @@ function makeBoard () {
 }
 
 
-/* TRYING TO DEFINE MY FUNCTION TO RESET THE BOARD THE SAME SIZE.
-CAN'T MAKE IT WORK DAMMIT!!!
+// Defining makeSameBoard function
+function makeSameBoard () {
+  // Delete the contents of old board
+  document.getElementById('message').innerHTML = "";
+  document.getElementById('message').classList = "";
+  document.getElementById('notes').innerHTML = "";
+  document.getElementById('notes').classList = "";
+  document.getElementsByClassName('board')[0].innerHTML = "";
+  document.getElementsByClassName('board')[0].classList = "board";
+  document.getElementById('play-again').innerHTML = "";
+  
 
-      // Defining makeSameBoard function
-      function makeSameBoard () {
-        // Delete the old board
-        document.getElementById('message').innerHTML = "";
-        document.getElementById('notes').innerHTML = "";
-        document.getElementsByClassName('board'[0]).innerHTML = "";
-        document.getElementById('play-again').innerHTML = "";
+  // Setting board size as the same
+  let newBoardWidth = board.width;
+  let newBoardHeight = board.height;
+  board = {};
+  board.width = newBoardWidth;
+  board.height = newBoardHeight;
+  board.area = board.width * board.height;
+  
+  // Setting board cells
+  board.cells = [];
+  for (cell = 0; cell < board.area; cell++) {
+    board.cells.push({});
+  }
 
-        // Setting board size
-        let newBoardWidth = board.width;
-        let newBoardHeight = board.height;
-        board = {};
-        board.width = newBoardWidth;
-        board.height = newBoardHeight;
-        board.area = board.width * board.height;
-        
-        // Setting board cells
-        board.cells = [];
-        for (cell = 0; cell < board.area; cell++) {
-          board.cells.push({});
-        }
+  // Initializing row and col variables
+  let myRow = 0;
+  let myCol = 0;
 
-        // Initializing row and col variables
-        let myRow = 0;
-        let myCol = 0;
+  // Looping through cell objects and assigning row and col properties.
+  // Only works up to width * 6 since game can only cope with 36 cells
+  for (cell = 0; cell < board.cells.length; cell++) {
+    if (cell == board.width || cell == (board.width * 2) || cell == (board.width * 3) || cell == (board.width * 4) || cell == (board.width * 5) || cell == (board.width * 6)) {
+      myRow++;
+      myCol = myCol - board.width;
+    }
+    board.cells[cell].row = myRow;
+    board.cells[cell].col = myCol;
+    myCol++;
+  }
 
-        // Looping through cell objects and assigning row and col properties.
-        // Only works up to width * 8 since I don't want the board to go any bigger
-        for (cell = 0; cell < board.cells.length; cell++) {
-          if (cell == board.width || cell == (board.width * 2) || cell == (board.width * 3) || cell == (board.width * 4) || cell == (board.width * 5) || cell == (board.width * 6) || cell == (board.width * 7) || cell == (board.width * 8)) {
-            myRow++;
-            myCol = myCol - board.width;
-          }
+  // Looping through cell objects and assigning hidden and isMarked
+  // properties.
+  for (cell = 0; cell < board.cells.length; cell++) {
+    board.cells[cell].hidden = true;
+    board.cells[cell].isMarked = false;
 
-          board.cells[cell].row = myRow;
-          board.cells[cell].col = myCol;
-          myCol++;
-        }
+  // Assigning isMine = true to 30% of cells.
+    let mineChance = Math.floor(Math.random() * 100)
+    if (mineChance >= 70) {
+      board.cells[cell].isMine = true;
+    } else {
+      board.cells[cell].isMine = false;
+    }
+  }
 
-        // Looping through cell objects and assigning hidden and isMarked
-        // properties.
-        for (cell = 0; cell < board.cells.length; cell++) {
-          board.cells[cell].hidden = true;
-          board.cells[cell].isMarked = false;
+  for (var i = 0; i < board.cells.length; i++) {
+    var surroundingMines = countSurroundingMines(board.cells[i]);
+    board.cells[i].surroundingMines = surroundingMines;
+  }
 
-        // Assigning isMine = true to 30% of cells.
-          let mineChance = Math.floor(Math.random() * 100)
-          if (mineChance >= 70) {
-            board.cells[cell].isMine = true;
-          } else {
-            board.cells[cell].isMine = false;
-          }
-        }
+  document.addEventListener('click', checkForWin);
+  document.addEventListener('contextmenu', checkForWin);
 
-        for (var i = 0; i < board.cells.length; i++) {
-          var surroundingMines = countSurroundingMines(board.cells[i]);
-          board.cells[i].surroundingMines = surroundingMines;
-        }
+  lib.initBoard()
+}
 
-        document.addEventListener('click', checkForWin);
-        document.addEventListener('contextmenu', checkForWin);
 
-        lib.initBoard()
-      }
-*/
+// Defining makeBiggerBoard function
+function makeBiggerBoard () {
+  // First check we're not making a board bigger than max 36 cells
+  let newBoardWidth = board.width + 1;
+  let newBoardHeight = board.height + 1;
+  if (newBoardWidth > 6 || newBoardHeight > 6) {
+    alert('Go home, you\'re drunk')
+    return;
+  }
+
+  // Delete the contents of old board
+  document.getElementById('message').innerHTML = "";
+  document.getElementById('message').classList = "";
+  document.getElementById('notes').innerHTML = "";
+  document.getElementById('notes').classList = "";
+  document.getElementsByClassName('board')[0].innerHTML = "";
+  document.getElementsByClassName('board')[0].classList = "board";
+  document.getElementById('play-again').innerHTML = "";
+
+  // Rebuilding board object and properties
+  board = {};
+  board.width = newBoardWidth;
+  board.height = newBoardHeight;
+  board.area = board.width * board.height;
+  board.cells = [];
+
+  // Creating cell objects
+  for (cell = 0; cell < board.area; cell++) {
+    board.cells.push({});
+  }
+
+  // Initializing row and col variables
+  let myRow = 0;
+  let myCol = 0;
+
+  // Looping through cell objects and assigning row and col properties.
+  // Only works up to width * 8 since I don't want the board to go any bigger
+  for (cell = 0; cell < board.cells.length; cell++) {
+    if (cell == board.width || cell == (board.width * 2) || cell == (board.width * 3) || cell == (board.width * 4) || cell == (board.width * 5) || cell == (board.width * 6) || cell == (board.width * 7) || cell == (board.width * 8)) {
+      myRow++;
+      myCol = myCol - board.width;
+    }
+    board.cells[cell].row = myRow;
+    board.cells[cell].col = myCol;
+    myCol++;
+  }
+
+  // Looping through cell objects and assigning hidden and isMarked
+  // properties.
+  for (cell = 0; cell < board.cells.length; cell++) {
+    board.cells[cell].hidden = true;
+    board.cells[cell].isMarked = false;
+
+  // Assigning isMine = true to 30% of cells.
+    let mineChance = Math.floor(Math.random() * 100)
+    if (mineChance >= 70) {
+      board.cells[cell].isMine = true;
+    } else {
+      board.cells[cell].isMine = false;
+    }
+  }
+
+  for (var i = 0; i < board.cells.length; i++) {
+    var surroundingMines = countSurroundingMines(board.cells[i]);
+    board.cells[i].surroundingMines = surroundingMines;
+  }
+
+  document.addEventListener('click', checkForWin);
+  document.addEventListener('contextmenu', checkForWin);
+
+  lib.initBoard()
+}
+
+
+
+// Defining makeSmallerBoard function
+function makeSmallerBoard () {
+  // First check we're not making a smaller board than the minimum cells
+  let newBoardWidth = board.width - 1;
+  let newBoardHeight = board.height - 1;
+  if (newBoardWidth < 2 || newBoardHeight < 2) {
+    alert('Go home, you\'re drunk')
+    return;
+  }
+  
+
+  // Delete the contents of old board
+  document.getElementById('message').innerHTML = "";
+  document.getElementById('message').classList = "";
+  document.getElementById('notes').innerHTML = "";
+  document.getElementById('notes').classList = "";
+  document.getElementsByClassName('board')[0].innerHTML = "";
+  document.getElementsByClassName('board')[0].classList = "board";
+  document.getElementById('play-again').innerHTML = "";
+
+  // Rebuilding board object and properties
+  board = {};
+  board.width = newBoardWidth;
+  board.height = newBoardHeight;
+  board.area = board.width * board.height;
+  board.cells = [];
+
+  // Creating cell objects
+  for (cell = 0; cell < board.area; cell++) {
+    board.cells.push({});
+  }
+
+  // Initializing row and col variables
+  let myRow = 0;
+  let myCol = 0;
+
+  // Looping through cell objects and assigning row and col properties.
+  // Only works up to width * 8 since I don't want the board to go any bigger
+  for (cell = 0; cell < board.cells.length; cell++) {
+    if (cell == board.width || cell == (board.width * 2) || cell == (board.width * 3) || cell == (board.width * 4) || cell == (board.width * 5) || cell == (board.width * 6) || cell == (board.width * 7) || cell == (board.width * 8)) {
+      myRow++;
+      myCol = myCol - board.width;
+    }
+    board.cells[cell].row = myRow;
+    board.cells[cell].col = myCol;
+    myCol++;
+  }
+
+  // Looping through cell objects and assigning hidden and isMarked
+  // properties.
+  for (cell = 0; cell < board.cells.length; cell++) {
+    board.cells[cell].hidden = true;
+    board.cells[cell].isMarked = false;
+
+  // Assigning isMine = true to 30% of cells.
+    let mineChance = Math.floor(Math.random() * 100)
+    if (mineChance >= 70) {
+      board.cells[cell].isMine = true;
+    } else {
+      board.cells[cell].isMine = false;
+    }
+  }
+
+  for (var i = 0; i < board.cells.length; i++) {
+    var surroundingMines = countSurroundingMines(board.cells[i]);
+    board.cells[i].surroundingMines = surroundingMines;
+  }
+
+  document.addEventListener('click', checkForWin);
+  document.addEventListener('contextmenu', checkForWin);
+
+  lib.initBoard()
+}
+
 
 
 
