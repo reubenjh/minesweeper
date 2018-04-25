@@ -37,10 +37,27 @@ function checkForWin () {
   // You can use this function call to declare a winner (once you've
   // detected that they've won, that is!)
   lib.displayMessage('You win!')
+  removeListeners()
   
   // Giving reset options on game win
-  removeListeners()
-  document.getElementById('play-again').innerHTML = '<p class="title">PLAY AGAIN?</p><button id="same">SAME SIZE</button><button id="bigger">BIGGER</button><button id="smaller">SMALLER</button><p class="context">up to 8x8 max size</p>'
+  // First, write 'play again?' section below board.
+  document.getElementById('play-again').innerHTML = '<p class="title">PLAY AGAIN?</p><button id="same">SAME SIZE</button><button id="bigger">BIGGER</button><button id="smaller">SMALLER</button><p class="context">Min 2x2, max 8x8 board size</p>'
+  
+  // Then give the buttons the hover class on mouseenter, 
+  // and take it off on mouseout, for cool looking buttons
+  let buttons = document.getElementsByTagName('button')
+  for (count = 0; count < buttons.length; count++) {
+    buttons[count].addEventListener('mouseenter', function(evt) {
+      evt.target.classList.add('hover');
+      }
+    )
+    buttons[count].addEventListener('mouseout', function(evt) {
+      evt.target.classList.remove('hover');
+      }
+    )
+  }
+  
+  // Give buttons their click functions
   document.getElementById('same').addEventListener('click', makeSameBoard)
   document.getElementById('bigger').addEventListener('click', makeBiggerBoard)
   document.getElementById('smaller').addEventListener('click', makeSmallerBoard)
